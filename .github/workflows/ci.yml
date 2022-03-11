@@ -1,0 +1,28 @@
+name: Build
+
+on:
+  push:
+    tags:
+    - 'v*'
+
+jobs:
+  prep:
+    name: Build the Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - name: Build the image
+        run: |
+          # Build the base image
+          docker build -t metacall/distributable_linux -f Dockerfile .
+          # Install the additional channels and pull (can't be cached)
+          docker run --privileged --name tmp metacall/distributable_linux sh -c 'guix pull'
+          # Commit changes
+          docker commit tmp metacall/distributable_linux && docker rm -f tmp
+          # Build dependencies
+          docker run -d --privileged --name tmp metacall/distributable_linux /metacall/scripts/deps.sh
+          # Commit changes
+          docker commit tmp metacall/distributable_linux && docker rm -f tmp
+          # Build tarball
+          docker run --rm -v $PWD/out:/metacall/pack --privileged metacall/distributable_linux /metacall/scripts/build.sh
