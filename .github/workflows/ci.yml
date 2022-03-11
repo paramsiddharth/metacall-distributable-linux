@@ -12,17 +12,20 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
-      - name: Build the image
-        run: |
-          # Build the base image
-          docker build -t metacall/distributable_linux -f Dockerfile .
-          # Install the additional channels and pull (can't be cached)
-          docker run --privileged --name tmp metacall/distributable_linux sh -c 'guix pull'
-          # Commit changes
-          docker commit tmp metacall/distributable_linux && docker rm -f tmp
-          # Build dependencies
-          docker run -d --privileged --name tmp metacall/distributable_linux /metacall/scripts/deps.sh
-          # Commit changes
-          docker commit tmp metacall/distributable_linux && docker rm -f tmp
-          # Build tarball
-          docker run --rm -v $PWD/out:/metacall/pack --privileged metacall/distributable_linux /metacall/scripts/build.sh
+      - name: Build the base image
+        run: docker build -t metacall/distributable_linux -f Dockerfile .
+      - name: Install the additional channels and pull (can't be cached)
+        run: docker run --privileged --name tmp metacall/distributable_linux sh -c 'guix pull'
+      - name: Commit changes
+        run: docker commit tmp metacall/distributable_linux && docker rm -f tmp
+      - name: Build dependencies
+        run: docker run -d --privileged --name tmp metacall/distributable_linux /metacall/scripts/deps.sh
+      - name: Commit changes
+        run: docker commit tmp metacall/distributable_linux && docker rm -f tmp
+      - name: Build tarball
+        run: docker run --rm -v $PWD/out:/metacall/pack --privileged metacall/distributable_linux /metacall/scripts/build.sh
+      - name: Upload tarball artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: built-tarball
+          path: out/
