@@ -6,8 +6,10 @@ on:
     - 'v*'
 
 jobs:
+
   prep:
-    name: Build the Docker image
+  
+    name: Prepare
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
@@ -29,3 +31,28 @@ jobs:
         with:
           name: built-tarball
           path: out/
+  
+  test:
+
+    name: Test
+    runs-on: ubumtu-latest
+    needs: prep
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - uses: actions/download-artifact@v3
+        with:
+          name: built-tarball
+          path: out/
+      - name: Generate a unique id for invalidating the cache of test layers
+        run: export CACHE_INVALIDATE=$(date +%s)
+      - name: Test CLI
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:cli -f tests/cli/Dockerfile .
+      - name: Test C
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:c -f tests/c/Dockerfile .
+      - name: Test Python
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:python -f tests/python/Dockerfile .
+      - name: Test Node
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:node -f tests/node/Dockerfile .
+      - name: Test TypeScript
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:typescript -f tests/typescript/Dockerfile .
