@@ -17,7 +17,6 @@ jobs:
   
     name: Prepare
     runs-on: ubuntu-latest
-    container: docker:19.03.12-dind
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -43,7 +42,6 @@ jobs:
 
     name: Test
     runs-on: ubuntu-latest
-    container: docker:19.03.12-dind
     needs: prep
     steps:
       - name: Check out the repo
