@@ -21,23 +21,18 @@ jobs:
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
-      # - name: Build the base image
-      #   run: docker build -t metacall/distributable_linux -f Dockerfile .
-      # - name: Install the additional channels and pull
-      #   run: docker run --privileged --name tmp metacall/distributable_linux sh -c 'guix pull'
-      # - name: Commit changes
-      #   run: docker commit tmp metacall/distributable_linux && docker rm -f tmp
-      # - name: Build dependencies
-      #   run: docker run -d --privileged --name tmp metacall/distributable_linux /metacall/scripts/deps.sh
-      # - name: Commit changes
-      #   run: docker commit tmp metacall/distributable_linux && docker rm -f tmp
-      # - name: Build tarball
-      #   run: docker run --rm -v $PWD/out:/metacall/pack --privileged metacall/distributable_linux /metacall/scripts/build.sh
-      - name: Dummy file creation
-        run: |
-          mkdir -p out/
-          echo 'Nothing...' > out/something.txt
-          tar -czvf out/tarball.tar.gz out/something.txt
+      - name: Build the base image
+        run: docker build -t metacall/distributable_linux -f Dockerfile .
+      - name: Install the additional channels and pull
+        run: docker run --privileged --name tmp metacall/distributable_linux sh -c 'guix pull'
+      - name: Commit changes
+        run: docker commit tmp metacall/distributable_linux && docker rm -f tmp
+      - name: Build dependencies
+        run: docker run -d --privileged --name tmp metacall/distributable_linux /metacall/scripts/deps.sh
+      - name: Commit changes
+        run: docker commit tmp metacall/distributable_linux && docker rm -f tmp
+      - name: Build tarball
+        run: docker run --rm -v $PWD/out:/metacall/pack --privileged metacall/distributable_linux /metacall/scripts/build.sh
       - name: Upload tarball artifact
         uses: actions/upload-artifact@v3
         with:
@@ -59,18 +54,16 @@ jobs:
           path: out/
       - name: Generate a unique id for invalidating the cache of test layers
         run: echo "CACHE_INVALIDATE=$(date +%s)" >> $GITHUB_ENV
-      - name: Dummy success
-        run: echo 'Superb! This works.'
-      # - name: Test CLI
-      #   run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:cli -f tests/cli/Dockerfile .
-      # - name: Test C
-      #   run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:c -f tests/c/Dockerfile .
-      # - name: Test Python
-      #   run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:python -f tests/python/Dockerfile .
-      # - name: Test Node
-      #   run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:node -f tests/node/Dockerfile .
-      # - name: Test TypeScript
-      #   run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:typescript -f tests/typescript/Dockerfile .
+      - name: Test CLI
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:cli -f tests/cli/Dockerfile .
+      - name: Test C
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:c -f tests/c/Dockerfile .
+      - name: Test Python
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:python -f tests/python/Dockerfile .
+      - name: Test Node
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:node -f tests/node/Dockerfile .
+      - name: Test TypeScript
+        run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:typescript -f tests/typescript/Dockerfile .
   
   publish-github:
 
