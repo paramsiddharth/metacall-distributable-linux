@@ -5,12 +5,19 @@ on:
     tags:
     - 'v*'
 
+env:
+  ASSET_NAME: metacall-tarball-linux-amd64.tar.gz
+  GHR_VERSION: 0.12.0
+  # GH_TOKEN          - From repository settings/variables
+  # GITHUB_REPOSITORY - Default variable
+
 jobs:
 
   prep:
   
     name: Prepare
     runs-on: ubuntu-latest
+    container: docker:19.03.12-dind
     steps:
       - name: Check out the repo
         uses: actions/checkout@v2
@@ -62,3 +69,35 @@ jobs:
       #   run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:node -f tests/node/Dockerfile .
       # - name: Test TypeScript
       #   run: docker build --build-arg CACHE_INVALIDATE=${CACHE_INVALIDATE} -t metacall/distributable_linux_test:typescript -f tests/typescript/Dockerfile .
+  
+  publish-github:
+
+    name: Publish on GitHub
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+      - uses: actions/download-artifact@v3
+        with:
+          name: built-tarball
+          path: out/
+      - name: Load GHR binary
+        run: |
+          curl -sL https://github.com/tcnksm/ghr/releases/download/v${GHR_VERSION}/ghr_v${GHR_VERSION}_linux_amd64.tar.gz | tar zx
+          chmod +x ghr_v${GHR_VERSION}_linux_amd64/ghr
+          mv ghr_v${GHR_VERSION}_linux_amd64/ghr /usr/local/bin
+      - name:
+        run: |
+          export GH_REPO_OWNER=${GITHUB_REPOSITORY_OWNER}
+          export GH_REPO_NAME=${GITHUB_REPOSITORY#*/}
+          export PREVIOUS_TAG=`git describe HEAD^1 --abbrev=0 --tags`
+          export GIT_HISTORY=`git log --no-merges --format="- %s" ${PREVIOUS_TAG}..HEAD`
+      - name: Publish package
+        run: |
+          if [[ "${PREVIOUS_TAG}" == "" ]]; then export GIT_HISTORY=`git log --no-merges --format="- %s"`; fi
+          if [[ "${CI_COMMIT_TAG}" == "" ]]; then export CI_COMMIT_TAG=${PREVIOUS_TAG}; fi
+          export RELEASE_DATE=`date '+%Y-%m-%d'`
+          mv ${PWD}/out/tarball.tar.gz ${PWD}/out/${ASSET_NAME}
+          echo "MetaCall Distributable Linux ${CI_COMMIT_TAG} [${RELEASE_DATE}] - ${GH_REPO_OWNER}/${GH_REPO_NAME}:${CI_COMMIT_SHA}" && echo "${GIT_HISTORY}"
+          ghr -t "${{ secrets.GITHUB_TOKEN }}" -u "${GH_REPO_OWNER}" -r "${GH_REPO_NAME}" -c "${CI_COMMIT_SHA}" -n "MetaCall Distributable Linux ${CI_COMMIT_TAG} [${RELEASE_DATE}]" -b "${GIT_HISTORY}" -replace "${CI_COMMIT_TAG}" ${PWD}/out/${ASSET_NAME}
