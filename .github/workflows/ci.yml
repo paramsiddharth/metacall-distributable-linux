@@ -28,7 +28,7 @@ jobs:
       #   run: docker run --rm -v $PWD/out:/metacall/pack --privileged metacall/distributable_linux /metacall/scripts/build.sh
       - name: Dummy file creation
         run: |
-          mkdir out/
+          mkdir -p out/
           echo 'Nothing...' > out/something.txt
       - name: Upload tarball artifact
         uses: actions/upload-artifact@v3
