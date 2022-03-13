@@ -98,9 +98,9 @@ jobs:
           git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1)
           export PREVIOUS_TAG=$(git describe HEAD^1 --abbrev=0 --tags)
           echo "PREVIOUS_TAG=${PREVIOUS_TAG}" >> $GITHUB_ENV
-          echo "GIT_HISTORY<<EOF" >> $GITHUB_ENV
+          echo "GIT_HISTORY<<EOF123" >> $GITHUB_ENV
           echo "$(git log --no-merges --format="- %s" ${PREVIOUS_TAG}..HEAD)" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+          echo "EOF123" >> $GITHUB_ENV
       - name: Publish package to GitHub Releases
         run: |
           if [[ "${PREVIOUS_TAG}" == "" ]];  then export GIT_HISTORY=$(git log --no-merges --format="- %s"); fi
