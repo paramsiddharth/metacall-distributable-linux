@@ -95,7 +95,6 @@ jobs:
         run: |
           echo "GH_REPO_OWNER=${GITHUB_REPOSITORY_OWNER}" >> $GITHUB_ENV
           echo "GH_REPO_NAME=${GITHUB_REPOSITORY#*/}" >> $GITHUB_ENV
-          git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1)
           export PREVIOUS_TAG=$(git describe HEAD^1 --abbrev=0 --tags)
           echo "PREVIOUS_TAG=${PREVIOUS_TAG}" >> $GITHUB_ENV
           echo "GIT_HISTORY<<EOF" >> $GITHUB_ENV
