@@ -8,7 +8,7 @@ on:
 env:
   ASSET_NAME: metacall-tarball-linux-amd64.tar.gz
   GHR_VERSION: 0.12.0
-  # GH_TOKEN          - From repository settings/variables
+  # GITHUB_TOKEN      - From default secrets
   # GITHUB_REPOSITORY - Default variable
 
 jobs:
@@ -88,15 +88,15 @@ jobs:
           curl -sL https://github.com/tcnksm/ghr/releases/download/v${GHR_VERSION}/ghr_v${GHR_VERSION}_linux_amd64.tar.gz | tar zx
           chmod +x ghr_v${GHR_VERSION}_linux_amd64/ghr
           mv ghr_v${GHR_VERSION}_linux_amd64/ghr /usr/local/bin
-      - name:
+      - name: Export variables
         run: |
           export GH_REPO_OWNER=${GITHUB_REPOSITORY_OWNER}
           export GH_REPO_NAME=${GITHUB_REPOSITORY#*/}
-          export PREVIOUS_TAG=`git describe HEAD^1 --abbrev=0 --tags`
-          export GIT_HISTORY=`git log --no-merges --format="- %s" ${PREVIOUS_TAG}..HEAD`
-      - name: Publish package
+          export PREVIOUS_TAG=$(git describe HEAD^1 --abbrev=0 --tags)
+          export GIT_HISTORY=$(git log --no-merges --format="- %s" ${PREVIOUS_TAG}..HEAD)
+      - name: Publish package to GitHub Releases
         run: |
-          if [[ "${PREVIOUS_TAG}" == "" ]]; then export GIT_HISTORY=`git log --no-merges --format="- %s"`; fi
+          if [[ "${PREVIOUS_TAG}" == "" ]]; then export GIT_HISTORY=$(git log --no-merges --format="- %s"); fi
           if [[ "${CI_COMMIT_TAG}" == "" ]]; then export CI_COMMIT_TAG=${PREVIOUS_TAG}; fi
           export RELEASE_DATE=`date '+%Y-%m-%d'`
           mv ${PWD}/out/tarball.tar.gz ${PWD}/out/${ASSET_NAME}
