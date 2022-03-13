@@ -92,9 +92,12 @@ jobs:
         run: |
           export GH_REPO_OWNER=${GITHUB_REPOSITORY_OWNER}
           export GH_REPO_NAME=${GITHUB_REPOSITORY#*/}
+          git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1)
+          echo "All tags:"
+          git tag -l
           export PREVIOUS_TAG=$(git describe --abbrev=0 --tags $(git rev-list --tags --skip=1 --max-count=1))
           export GIT_HISTORY=$(git log --no-merges --format="- %s" ${PREVIOUS_TAG}..HEAD)
-          echo $PREVIOUS_TAG $GIT_HISTORY
+          echo $PREVIOUS_TAG "${GIT_HISTORY}"
       - name: Publish package to GitHub Releases
         run: |
           if [[ "${PREVIOUS_TAG}" == "" ]]; then export GIT_HISTORY=$(git log --no-merges --format="- %s"); fi
